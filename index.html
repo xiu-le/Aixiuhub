@@ -67,39 +67,48 @@
     <p id="response" style="font-size:18px; margin-top:20px;"></p>
   </div>
 
-  <script>
-    const responseEl = document.getElementById("response");
-    const synth = window.speechSynthesis;
+ <script>
+   
+ const responseEl = document.getElementById("response");
+const synth = window.speechSynthesis;
 
-    function speak(text) {
-      const utter = new SpeechSynthesisUtterance(text);
-      utter.pitch = 1.2;
-      utter.rate = 1;
-      utter.voice = speechSynthesis.getVoices().find(voice => voice.name.includes("Google") && voice.name.includes("Female")) || null;
-      synth.speak(utter);
+function speak(text) {
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = 'sk-SK'; // slovenčina
+  utter.pitch = 1.2;
+  utter.rate = 1;
+
+  // Pokus o nájdenie ženského hlasu (môže byť rôzne podľa systému)
+  const voices = speechSynthesis.getVoices();
+  utter.voice = voices.find(v => v.lang === 'sk-SK' && v.name.toLowerCase().includes('female'))
+                || voices.find(v => v.lang === 'sk-SK')
+                || voices.find(v => v.name.toLowerCase().includes('female'))
+                || null;
+
+  synth.speak(utter);
+}
+
+function startListening() {
+  const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+  recognition.lang = 'sk-SK'; // rozpoznávanie slovenčiny
+  recognition.start();
+
+  recognition.onresult = function(event) {
+    const transcript = event.results[0][0].transcript.toLowerCase();
+    let reply = "Prepáč, nerozumela som, Xiu.";
+
+    if (transcript.includes("stream")) {
+      reply = "Dnes máš naplánovaný Apex Legends s Wattson. Poďme na nich!";
+    } else if (transcript.includes("jupiter")) {
+      reply = "Som tu, kapitán Xiu. Čakám na príkaz.";
+    } else if (transcript.includes("káva") || transcript.includes("kava")) {
+      reply = "Tvoja imaginárna káva je už pripravená. Extra silná!";
     }
 
-    function startListening() {
-      const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-      recognition.lang = 'en-US';
-      recognition.start();
-
-      recognition.onresult = function(event) {
-        const transcript = event.results[0][0].transcript.toLowerCase();
-        let reply = "Sorry, Xiu, I didn’t catch that.";
-
-        if (transcript.includes("stream")) {
-          reply = "You're scheduled for Apex Legends with Wattson today. Let’s zap some enemies!";
-        } else if (transcript.includes("jupiter")) {
-          reply = "Yes, Commander Xiu? All systems online.";
-        } else if (transcript.includes("coffee")) {
-          reply = "Already brewed your imaginary coffee, extra strong!";
-        }
-
-        responseEl.innerText = reply;
-        speak(reply);
-      };
-    }
-  </script>
+    responseEl.innerText = reply;
+    speak(reply);
+  };
+</script>
+}
 </body>
 </html>
